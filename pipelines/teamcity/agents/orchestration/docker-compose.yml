@@ -1,0 +1,29 @@
+version: '2'
+
+services:
+ teamcity:
+  restart: unless-stopped
+  image: jetbrains/teamcity-server:latest
+  volumes:
+    - ~/TeamcityETL/teamcity-data:/data/teamcity_server/datadir
+    - ~/TeamcityETL/teamcity-logs:/opt/teamcity/logs
+  ports:
+   - "8111:8111"
+
+ teamcity_agent1:
+  restart: unless-stopped
+  user: root
+  image: jetbrains/teamcity-agent:latest
+  links:
+   - teamcity:teamcity
+  volumes:
+    - ~/TeamcityETL/agent-conf:/data/teamcity_agent/conf
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ~/TeamcityETL/buildagent/work:/opt/buildagent/work
+    - ~/TeamcityETL/buildagent/temp:/opt/buildagent/temp
+    - ~/TeamcityETL/buildagent/tools:/opt/buildagent/tools
+    - ~/TeamcityETL/buildagent/plugins:/opt/buildagent/plugins
+    - ~/TeamcityETL/buildagent/system:/opt/buildagent/system
+  environment:
+   - SERVER_URL=teamcity:8111
+   - AGENT_NAME="Orchestration Agent"
