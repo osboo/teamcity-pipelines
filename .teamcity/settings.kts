@@ -37,11 +37,11 @@ project {
 
     params {
         param("NODE_LABEL", "Agent1")
-        text("SP_PASSWORD", "%keyvault:KeyVault-TeamcityETL/password%", allowEmpty = true)
         param("RESOURCE_GROUP", "RG-TeamcityETL")
+        text("SP_PASSWORD", "%keyvault:KeyVault-TeamcityETL/password%", allowEmpty = true)
         text("SP_TENANT_ID", "%keyvault:KeyVault-TeamcityETL/tenant%", label = "SP_TENANT", description = "Service Principle tenant ID", allowEmpty = true)
-        param("SP_NAME", "%keyvault:keyvault-teamcityetl/name%")
         text("SP_APP_ID", "%keyvault:KeyVault-TeamcityETL/appId%", label = "SP_APP_ID", description = "Service Principle Name e.g. a5d00de1-0610-...", display = ParameterDisplay.HIDDEN, allowEmpty = true)
+        param("SP_NAME", "%keyvault:keyvault-teamcityetl/name%")
     }
 
     features {
@@ -85,6 +85,13 @@ object StartEtlAgent : BuildType({
             """.trimIndent()
             dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
             dockerImage = "mcr.microsoft.com/azure-cli"
+        }
+        script {
+            name = "Authorize Agent"
+            scriptContent = """
+                echo get new agent credentials
+                echo call to Teamcity Server to authorize the agent
+            """.trimIndent()
         }
     }
 
