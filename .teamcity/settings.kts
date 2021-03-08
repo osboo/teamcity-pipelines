@@ -4,7 +4,7 @@ import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.ScriptBuildStep
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.v2019_2.projectFeatures.githubConnection
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.finishBuildTrigger
-import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.vcs
+import jetbrains.buildServer.configs.kotlin.v2019_2.vcs.GitVcsRoot
 
 /*
 The settings script is an entry point for defining a TeamCity
@@ -32,16 +32,18 @@ version = "2020.2"
 
 project {
 
+    vcsRoot(HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain)
+
     buildType(StopEtlAgent)
     buildType(StartEtlAgent)
 
     params {
         param("NODE_LABEL", "Agent1")
-        text("SP_PASSWORD", "%keyvault:KeyVault-TeamcityETL/password%", allowEmpty = true)
         param("RESOURCE_GROUP", "RG-TeamcityETL")
+        text("SP_PASSWORD", "%keyvault:KeyVault-TeamcityETL/password%", allowEmpty = true)
         text("SP_TENANT_ID", "%keyvault:KeyVault-TeamcityETL/tenant%", label = "SP_TENANT", description = "Service Principle tenant ID", allowEmpty = true)
-        param("SP_NAME", "%keyvault:keyvault-teamcityetl/name%")
         text("SP_APP_ID", "%keyvault:KeyVault-TeamcityETL/appId%", label = "SP_APP_ID", description = "Service Principle Name e.g. a5d00de1-0610-...", display = ParameterDisplay.HIDDEN, allowEmpty = true)
+        param("SP_NAME", "%keyvault:keyvault-teamcityetl/name%")
     }
 
     features {
@@ -73,7 +75,7 @@ object StartEtlAgent : BuildType({
     }
 
     vcs {
-        root(DslContext.settingsRoot)
+        root(HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain)
     }
 
     steps {
@@ -86,10 +88,12 @@ object StartEtlAgent : BuildType({
             dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
             dockerImage = "mcr.microsoft.com/azure-cli"
         }
-    }
-
-    triggers {
-        vcs {
+        script {
+            name = "Authorize Agent"
+            scriptContent = """
+                echo get new agent credentials
+                echo call to Teamcity Server to authorize the agent
+            """.trimIndent()
         }
     }
 
@@ -104,7 +108,7 @@ object StopEtlAgent : BuildType({
     description = "Starts ETL agent in Azure"
 
     vcs {
-        root(DslContext.settingsRoot)
+        root(HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain)
     }
 
     steps {
@@ -135,4 +139,15 @@ object StopEtlAgent : BuildType({
         snapshot(StartEtlAgent) {
         }
     }
+})
+
+object HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain : GitVcsRoot({
+    name = "github-teamcity-etl"
+    url = "https://github.com/osboo/teamcity-pipelines"
+    branch = "refs/heads/main"
+    authMethod = password {
+        userName = "osboo"
+        password = "credentialsJSON:54315422-314d-441b-afa4-b4c1490d4086"
+    }
+    param("oauthProviderId", "PROJECT_EXT_5")
 })
