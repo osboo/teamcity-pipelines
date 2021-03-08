@@ -19,11 +19,11 @@ services:
   volumes:
     - ~/TeamcityETL/agent-conf:/data/teamcity_agent/conf
     - /var/run/docker.sock:/var/run/docker.sock
-    - ~/TeamcityETL/buildagent/work:/opt/buildagent/work
-    - ~/TeamcityETL/buildagent/temp:/opt/buildagent/temp
-    - ~/TeamcityETL/buildagent/tools:/opt/buildagent/tools
-    - ~/TeamcityETL/buildagent/plugins:/opt/buildagent/plugins
-    - ~/TeamcityETL/buildagent/system:/opt/buildagent/system
+    - /opt/buildagent/work:/opt/buildagent/work
+    - /opt/buildagent/temp:/opt/buildagent/temp
+    - /opt/buildagent/tools:/opt/buildagent/tools
+    - /opt/buildagent/plugins:/opt/buildagent/plugins
+    - /opt/buildagent/system:/opt/buildagent/system
   environment:
    - SERVER_URL=teamcity:8111
-   - AGENT_NAME="Orchestration Agent"
+   - AGENT_NAME=Orchestration Agent
