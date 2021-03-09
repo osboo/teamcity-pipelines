@@ -32,23 +32,24 @@ version = "2020.2"
 
 project {
 
-    vcsRoot(HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain)
+    vcsRoot(TeamcityETLVcsRoot)
 
     buildType(StopEtlAgent)
     buildType(StartEtlAgent)
-
+ 
     params {
-        param("NODE_LABEL", "Agent1")
+        param("AZURE_NODE_LABEL", "Agent1")
+        param("ETL_AGENT_NAME", "ETL Agent 1")
         param("RESOURCE_GROUP", "RG-TeamcityETL")
-        text("SP_PASSWORD", "%keyvault:KeyVault-TeamcityETL/password%", allowEmpty = true)
-        text("SP_TENANT_ID", "%keyvault:KeyVault-TeamcityETL/tenant%", label = "SP_TENANT", description = "Service Principle tenant ID", allowEmpty = true)
-        text("SP_APP_ID", "%keyvault:KeyVault-TeamcityETL/appId%", label = "SP_APP_ID", description = "Service Principle Name e.g. a5d00de1-0610-...", display = ParameterDisplay.HIDDEN, allowEmpty = true)
+        text("SP_PASSWORD", "%keyvault:KeyVault-TeamcityETL/password%")
+        text("SP_TENANT_ID", "%keyvault:KeyVault-TeamcityETL/tenant%", label = "SP_TENANT", description = "Service Principle tenant ID")
+        text("SP_APP_ID", "%keyvault:KeyVault-TeamcityETL/appId%", label = "SP_APP_ID", description = "Service Principle Name e.g. a5d00de1-0610-...")
         param("SP_NAME", "%keyvault:keyvault-teamcityetl/name%")
     }
 
     features {
         feature {
-            id = "PROJECT_EXT_2"
+            id = "Azure Key Vault plugin"
             type = "OAuthProvider"
             param("displayName", "Azure Key Vault")
             param("resource-uri", "https://vault.azure.net")
@@ -57,33 +58,18 @@ project {
             param("providerType", "teamcity-azurekeyvault")
             param("tenant-id", "3c88c0aa-b591-4711-9244-a26df4bcce13")
         }
-        githubConnection {
-            id = "PROJECT_EXT_5"
-            displayName = "GitHub.com"
-            clientId = "606ab541040b93842264"
-            clientSecret = "credentialsJSON:c0b2e1d5-a91c-470a-a347-e62cdabc9087"
-        }
-    }
 }
 
 object StartEtlAgent : BuildType({
     name = "Start ETL Agent"
     description = "Starts ETL agent in Azure"
 
-    params {
-        param("SP_APP_ID", "%keyvault:KeyVault-TeamcityETL/appId%")
-    }
-
-    vcs {
-        root(HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain)
-    }
-
     steps {
         script {
             name = "Start VM"
             scriptContent = """
                 az login --service-principal -u %SP_NAME% -p %SP_PASSWORD% --tenant %SP_TENANT_ID%
-                az vm start --name %NODE_LABEL% --resource-group %RESOURCE_GROUP% && az vm wait --name %NODE_LABEL% --resource-group %RESOURCE_GROUP% --custom "instanceView.statuses[?code=='PowerState/running']"
+                az vm start --name %AZURE_NODE_LABEL% --resource-group %RESOURCE_GROUP% && az vm wait --name %AZURE_NODE_LABEL% --resource-group %RESOURCE_GROUP% --custom "instanceView.statuses[?code=='PowerState/running']"
             """.trimIndent()
             dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
             dockerImage = "mcr.microsoft.com/azure-cli"
@@ -106,10 +92,6 @@ object StartEtlAgent : BuildType({
 object StopEtlAgent : BuildType({
     name = "Stop ETL Agent"
     description = "Starts ETL agent in Azure"
-
-    vcs {
-        root(HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain)
-    }
 
     steps {
         script {
@@ -141,7 +123,7 @@ object StopEtlAgent : BuildType({
     }
 })
 
-object HttpsGithubComOsbooTeamcityPipelinesRefsHeadsMain : GitVcsRoot({
+object TeamcityETLVcsRoot : GitVcsRoot({
     name = "github-teamcity-etl"
     url = "https://github.com/osboo/teamcity-pipelines"
     branch = "refs/heads/main"
