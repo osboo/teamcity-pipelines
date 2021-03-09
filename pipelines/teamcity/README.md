@@ -29,7 +29,7 @@ call `docker-compose up`
 This starts server and orchestration clients
 
 ## Configure Teamcity server
-Go to UI (`localhost:8111`)
+Go to UI (e.g. `localhost:8111`)
 - Authorize "Orchestration agent" when UI completes initialization
 - Setup git root
 - Install Azure Key Vault plugin

@@ -1,0 +1,15 @@
+ teamcity_agent2:
+  restart: unless-stopped
+  user: root
+  image: jetbrains/teamcity-agent:latest
+  volumes:
+    - ~/TeamcityETL/agent-conf:/data/teamcity_agent/conf
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /opt/buildagent/work:/opt/buildagent/work
+    - /opt/buildagent/temp:/opt/buildagent/temp
+    - /opt/buildagent/tools:/opt/buildagent/tools
+    - /opt/buildagent/plugins:/opt/buildagent/plugins
+    - /opt/buildagent/system:/opt/buildagent/system
+  environment:
+   - SERVER_URL=teamcity-etl-server.westeurope.cloudapp.azure.com:8111
+   - AGENT_NAME=ETL Agent 1
