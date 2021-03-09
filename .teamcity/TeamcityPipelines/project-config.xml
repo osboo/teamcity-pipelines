@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2020.1/project-config.xsd">
+  <name>Teamcity Pipelines</name>
+  <parameters>
+    <param name="NODE_LABEL" value="Agent1" />
+    <param name="RESOURCE_GROUP" value="RG-TeamcityETL" />
+    <param name="SP_APP_ID" value="%keyvault:KeyVault-TeamcityETL/appId%" spec="text label='SP_APP_ID' description='Service Principle Name e.g. a5d00de1-0610-...' display='hidden' validationMode='any'" />
+    <param name="SP_NAME" value="%keyvault:keyvault-teamcityetl/name%" />
+    <param name="SP_PASSWORD" value="%keyvault:KeyVault-TeamcityETL/password%" spec="text validationMode='any'" />
+    <param name="SP_TENANT_ID" value="%keyvault:KeyVault-TeamcityETL/tenant%" spec="text label='SP_TENANT' description='Service Principle tenant ID' validationMode='any'" />
+  </parameters>
+  <project-extensions>
+    <extension id="PROJECT_EXT_1" type="versionedSettings">
+      <parameters>
+        <param name="buildSettings" value="PREFER_VCS" />
+        <param name="credentialsStorageType" value="credentialsJSON" />
+        <param name="enabled" value="true" />
+        <param name="rootId" value="TeamcityPipelines_TeamcityPipelinesDev" />
+        <param name="showChanges" value="false" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_2" type="OAuthProvider">
+      <parameters>
+        <param name="client-id" value="5a6ee2d9-16d1-41db-bd93-9743ab5e28f6" />
+        <param name="displayName" value="Azure Key Vault" />
+        <param name="providerType" value="teamcity-azurekeyvault" />
+        <param name="resource-uri" value="https://vault.azure.net" />
+        <param name="secure:client-secret" value="credentialsJSON:5891b518-9fbd-4dc9-be37-a8345292bf60" />
+        <param name="tenant-id" value="3c88c0aa-b591-4711-9244-a26df4bcce13" />
+      </parameters>
+    </extension>
+    <extension id="PROJECT_EXT_5" type="OAuthProvider">
+      <parameters>
+        <param name="clientId" value="606ab541040b93842264" />
+        <param name="defaultTokenScope" value="public_repo,repo,repo:status,write:repo_hook" />
+        <param name="displayName" value="GitHub.com" />
+        <param name="gitHubUrl" value="https://github.com/" />
+        <param name="providerType" value="GitHub" />
+        <param name="secure:clientSecret" value="credentialsJSON:c0b2e1d5-a91c-470a-a347-e62cdabc9087" />
+      </parameters>
+    </extension>
+  </project-extensions>
+  <cleanup />
+</project>
+
