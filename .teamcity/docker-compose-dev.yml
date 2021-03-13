@@ -7,6 +7,7 @@ services:
   volumes:
     - ~/TeamcityETL/teamcity-data:/data/teamcity_server/datadir
     - ~/TeamcityETL/teamcity-logs:/opt/teamcity/logs
+    - ~/TeamcityETL/teamcity-pipelines:/mnt/repo
   ports:
    - "8111:8111"
 
