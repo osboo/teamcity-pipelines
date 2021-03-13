@@ -32,7 +32,7 @@ This starts server and orchestration clients
 Go to UI (e.g. `localhost:8111`)
 - Authorize "Orchestration agent" when UI completes initialization
 - Setup git root
-- Install Azure Key Vault plugin
+- Install Azure Key Vault plugin (AKV is supposed to get secrets to access ETL agent)
 - Restart server
 - Enable versionioned settings 
 
@@ -45,3 +45,47 @@ teamcity_1         |     TeamCity container is running under 'tcuser' (1000/1000
 sudo chown -R 1000:1000 teamcity-data
 sudo chown -R 1000:1000 teamcity-logs
 ```
+
+## ETL Agent setup
+- git (see above)
+- docker (see above)
+
+```
+mkdir /home/osboo
+cd /home/osboo
+git clone https://github.com/osboo/teamcity-pipelines.git
+```
+
+Add `docker-compose` as startup service to ETL
+```
+sudo touch /etc/systemd/system/docker-compose-app.service
+sudo vim /etc/systemd/system/docker-compose-app.service
+```
+Past following code:
+```
+# /etc/systemd/system/docker-compose-app.service
+
+[Unit]
+Description=Docker Compose Application Service
+Requires=docker.service
+After=docker.service
+
+[Service]
+WorkingDirectory=/home/osboo/teamcity-pipelines/.teamcity/agents/etl-agent
+ExecStart=/usr/local/bin/docker-compose up
+ExecStop=/usr/local/bin/docker-compose down
+TimeoutStartSec=0
+Restart=on-failure
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target
+```
+Then enable agent:
+
+`systemctl enable docker-compose-app`
+
+Restart VM
+
+Authorize agent in UI when it appears

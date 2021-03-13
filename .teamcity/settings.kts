@@ -44,6 +44,8 @@ project {
         text("SP_TENANT_ID", "%keyvault:KeyVault-TeamcityETL/tenant%", label = "SP_TENANT", description = "Service Principle tenant ID")
         text("SP_APP_ID", "%keyvault:KeyVault-TeamcityETL/appId%", label = "SP_APP_ID", description = "Service Principle Name e.g. a5d00de1-0610-...")
         param("SP_NAME", "%keyvault:keyvault-teamcityetl/name%")
+        param("TEAMCITY_API_TOKEN", "%keyvault:keyvault-teamcityetl/agent-api-token%")
+        param("TEAMCITY_SERVER_URL","http://teamcity-etl-server.westeurope.cloudapp.azure.com")
     }
 
     features {
@@ -74,10 +76,34 @@ project {
                 dockerImage = "mcr.microsoft.com/azure-cli"
             }
             script {
-                name = "Authorize Agent"
+                name = "Wait until Agent is connected"
                 scriptContent = """
-                    echo get new agent credentials
-                    echo call to Teamcity Server to authorize the agent
+                    urlencode() {
+                      python3 -c 'import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))' "${"$"}1"
+                    }
+                    encoded_name=$(urlencode "%ETL_AGENT_NAME%")
+                    
+                    while true; do
+                      response=$(curl -s -H "Accept: application/json" --header "Authorization: Bearer %TEAMCITY_API_TOKEN%" \
+                        %TEAMCITY_SERVER_URL%:8111/app/rest/agents/name:${"$"}encoded_name?fields=connected,authorized)
+                    
+                      is_connected=$(echo ${"$"}response | python3 -c "import sys, json; print(json.load(sys.stdin)['connected'])")
+                      is_authorized=$(echo ${"$"}response | python3 -c "import sys, json; print(json.load(sys.stdin)['authorized'])")
+                    
+                      if [ "${"$"}is_connected" = "True" ] && [ "${"$"}is_authorized" = "True" ] ; then
+                        echo "Agent %ETL_AGENT_NAME% connected"
+                        break
+                      fi
+                      echo "${"$"}ETL_AGENT_NAME status: ${"$"}response"
+                      sleep 5
+                    done
+                """.trimIndent()
+            }
+            script {
+                name = "Mount Azure Storage"
+                scriptContent = """
+                    echo download blobfuse
+                    echo mount local link to Azure Blob Storage
                 """.trimIndent()
             }
         }
@@ -90,7 +116,7 @@ project {
 
     object StopEtlAgent : BuildType({
         name = "Stop ETL Agent"
-        description = "Starts ETL agent in Azure"
+        description = "Stops ETL agent in Azure"
 
         steps {
             script {
