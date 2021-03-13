@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vcs-root xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="jetbrains.git" xsi:noNamespaceSchemaLocation="https://www.jetbrains.com/teamcity/schemas/2020.1/project-config.xsd">
+  <name>github-teamcity-etl</name>
+  <param name="agentCleanFilesPolicy" value="ALL_UNTRACKED" />
+  <param name="agentCleanPolicy" value="ON_BRANCH_CHANGE" />
+  <param name="authMethod" value="PASSWORD" />
+  <param name="branch" value="refs/heads/main" />
+  <param name="ignoreKnownHosts" value="true" />
+  <param name="oauthProviderId" value="PROJECT_EXT_5" />
+  <param name="secure:password" value="credentialsJSON:54315422-314d-441b-afa4-b4c1490d4086" />
+  <param name="submoduleCheckout" value="CHECKOUT" />
+  <param name="url" value="https://github.com/osboo/teamcity-pipelines" />
+  <param name="useAlternates" value="true" />
+  <param name="username" value="osboo" />
+  <param name="usernameStyle" value="USERID" />
+</vcs-root>
+

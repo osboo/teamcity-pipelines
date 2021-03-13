@@ -2,7 +2,6 @@ import jetbrains.buildServer.configs.kotlin.v2019_2.*
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.dockerSupport
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.ScriptBuildStep
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
-import jetbrains.buildServer.configs.kotlin.v2019_2.projectFeatures.githubConnection
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.finishBuildTrigger
 import jetbrains.buildServer.configs.kotlin.v2019_2.vcs.GitVcsRoot
 
@@ -36,7 +35,7 @@ project {
 
     buildType(StopEtlAgent)
     buildType(StartEtlAgent)
- 
+
     params {
         param("AZURE_NODE_LABEL", "Agent1")
         param("ETL_AGENT_NAME", "ETL Agent 1")
@@ -58,78 +57,78 @@ project {
             param("providerType", "teamcity-azurekeyvault")
             param("tenant-id", "3c88c0aa-b591-4711-9244-a26df4bcce13")
         }
+    }
 }
+    object StartEtlAgent : BuildType({
+        name = "Start ETL Agent"
+        description = "Starts ETL agent in Azure"
 
-object StartEtlAgent : BuildType({
-    name = "Start ETL Agent"
-    description = "Starts ETL agent in Azure"
-
-    steps {
-        script {
-            name = "Start VM"
-            scriptContent = """
-                az login --service-principal -u %SP_NAME% -p %SP_PASSWORD% --tenant %SP_TENANT_ID%
-                az vm start --name %AZURE_NODE_LABEL% --resource-group %RESOURCE_GROUP% && az vm wait --name %AZURE_NODE_LABEL% --resource-group %RESOURCE_GROUP% --custom "instanceView.statuses[?code=='PowerState/running']"
-            """.trimIndent()
-            dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
-            dockerImage = "mcr.microsoft.com/azure-cli"
+        steps {
+            script {
+                name = "Start VM"
+                scriptContent = """
+                    az login --service-principal -u %SP_NAME% -p %SP_PASSWORD% --tenant %SP_TENANT_ID%
+                    az vm start --name %AZURE_NODE_LABEL% --resource-group %RESOURCE_GROUP% && az vm wait --name %AZURE_NODE_LABEL% --resource-group %RESOURCE_GROUP% --custom "instanceView.statuses[?code=='PowerState/running']"
+                """.trimIndent()
+                dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
+                dockerImage = "mcr.microsoft.com/azure-cli"
+            }
+            script {
+                name = "Authorize Agent"
+                scriptContent = """
+                    echo get new agent credentials
+                    echo call to Teamcity Server to authorize the agent
+                """.trimIndent()
+            }
         }
-        script {
-            name = "Authorize Agent"
-            scriptContent = """
-                echo get new agent credentials
-                echo call to Teamcity Server to authorize the agent
-            """.trimIndent()
+
+        features {
+            dockerSupport {
+            }
         }
-    }
+    })
 
-    features {
-        dockerSupport {
+    object StopEtlAgent : BuildType({
+        name = "Stop ETL Agent"
+        description = "Starts ETL agent in Azure"
+
+        steps {
+            script {
+                name = "Stop VM"
+                scriptContent = """
+                    az login --service-principal -u %SP_NAME% -p %SP_PASSWORD% --tenant %SP_TENANT_ID%
+                    az vm deallocate --name %AZURE_NODE_LABEL% --resource-group %RESOURCE_GROUP%
+                """.trimIndent()
+                dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
+                dockerImage = "mcr.microsoft.com/azure-cli"
+            }
         }
-    }
-})
 
-object StopEtlAgent : BuildType({
-    name = "Stop ETL Agent"
-    description = "Starts ETL agent in Azure"
-
-    steps {
-        script {
-            name = "Stop VM"
-            scriptContent = """
-                az login --service-principal -u %SP_NAME% -p %SP_PASSWORD% --tenant %SP_TENANT_ID%
-                az vm deallocate --name %NODE_LABEL% --resource-group %RESOURCE_GROUP%
-            """.trimIndent()
-            dockerImagePlatform = ScriptBuildStep.ImagePlatform.Linux
-            dockerImage = "mcr.microsoft.com/azure-cli"
+        triggers {
+            finishBuildTrigger {
+                buildType = "${StartEtlAgent.id}"
+                successfulOnly = true
+            }
         }
-    }
 
-    triggers {
-        finishBuildTrigger {
-            buildType = "${StartEtlAgent.id}"
-            successfulOnly = true
+        features {
+            dockerSupport {
+            }
         }
-    }
 
-    features {
-        dockerSupport {
+        dependencies {
+            snapshot(StartEtlAgent) {
+            }
         }
-    }
+    })
 
-    dependencies {
-        snapshot(StartEtlAgent) {
+    object TeamcityETLVcsRoot : GitVcsRoot({
+        name = "github-teamcity-etl"
+        url = "https://github.com/osboo/teamcity-pipelines"
+        branch = "refs/heads/main"
+        authMethod = password {
+            userName = "osboo"
+            password = "credentialsJSON:54315422-314d-441b-afa4-b4c1490d4086"
         }
-    }
-})
-
-object TeamcityETLVcsRoot : GitVcsRoot({
-    name = "github-teamcity-etl"
-    url = "https://github.com/osboo/teamcity-pipelines"
-    branch = "refs/heads/main"
-    authMethod = password {
-        userName = "osboo"
-        password = "credentialsJSON:54315422-314d-441b-afa4-b4c1490d4086"
-    }
-    param("oauthProviderId", "PROJECT_EXT_5")
-})
+        param("oauthProviderId", "PROJECT_EXT_5")
+    })

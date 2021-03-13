@@ -33,4 +33,15 @@ Go to UI (e.g. `localhost:8111`)
 - Authorize "Orchestration agent" when UI completes initialization
 - Setup git root
 - Install Azure Key Vault plugin
+- Restart server
 - Enable versionioned settings 
+
+## Troubleshooting
+In case
+```
+Looks like some mandatory directories are not writable (see above).
+teamcity_1         |     TeamCity container is running under 'tcuser' (1000/1000) user.
+
+sudo chown -R 1000:1000 teamcity-data
+sudo chown -R 1000:1000 teamcity-logs
+```
